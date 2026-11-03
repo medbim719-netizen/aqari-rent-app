@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة المالك | عقارات للإيجار</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#172033;background:#f4f6fa}
+*{box-sizing:border-box}body{margin:0;padding:18px}.wrap{max-width:760px;margin:auto}
+header,.card{background:white;border:1px solid #e4e8f0;border-radius:16px;padding:18px;margin-bottom:16px}
+h1{font-size:24px;margin:0 0 6px}h2{font-size:19px;margin:0 0 14px}
+p{line-height:1.7;color:#596579}.muted{font-size:13px;color:#687386}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input,textarea{width:100%;padding:12px;border:1px solid #cbd3df;border-radius:10px;font:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical}
+button{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:#183b70;color:white;margin:8px 5px 0 0}
+button.secondary{background:#e8edf5;color:#172033}button.danger{background:#a62929}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item{border:1px solid #e1e6ee;border-radius:12px;padding:12px;margin-top:12px;display:grid;grid-template-columns:112px 1fr;gap:12px}
+.item img{width:112px;height:100px;object-fit:cover;border-radius:8px;background:#eee}
+.item h3{margin:0 0 6px;font-size:17px}.item p{margin:4px 0;font-size:14px}
+#app{display:none}.notice{background:#fff7df;border:1px solid #f0d88e;border-radius:10px;padding:12px}
+@media(max-width:520px){.row{grid-template-columns:1fr}.item{grid-template-columns:88px 1fr}.item img{width:88px;height:88px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>لوحة المالك — عقارات للإيجار</h1>
+<p>نسخة تجريبية خاصة بهذا المتصفح. العقارات والصور تحفظ على هذا الجهاز فقط، ولا تُرسل إلى الموقع أو إلى الزوار.</p>
+<div class="notice muted">تنبيه: لا تمسح بيانات Safari أو بيانات الموقع إذا كنت تريد الاحتفاظ بالعقارات التجريبية. هذه اللوحة ليست نظام حماية لحسابات أو بيانات حساسة.</div>
+</header>
+
+<section class="card" id="gate">
+<h2>دخول المالك</h2>
+<p id="gateText">أنشئ رمز دخول من 4 أرقام لهذه اللوحة على هذا الجهاز.</p>
+<label for="pin">رمز الدخول</label>
+<input id="pin" inputmode="numeric" type="password" maxlength="4" placeholder="4 أرقام">
+<button id="enter">متابعة</button>
+<p class="muted" id="gateError"></p>
+</section>
+
+<main id="app">
+<section class="card">
+<h2 id="formTitle">إضافة عقار تجريبي</h2>
+<form id="propertyForm">
+<input type="hidden" id="editId">
+<label for="title">اسم العقار أو عنوانه</label><input id="title" required maxlength="100" placeholder="مثلاً: شقة مفروشة">
+<div class="row">
+<div><label for="price">السعر</label><input id="price" required maxlength="40" placeholder="مثلاً: 15000 أوقية شهرياً"></div>
+<div><label for="phone">رقم التواصل</label><input id="phone" maxlength="40" placeholder="رقم الهاتف"></div>
+</div>
+<div class="row">
+<div><label for="city">المدينة</label><input id="city" maxlength="60" placeholder="نواكشوط"></div>
+<div><label for="area">الحي</label><input id="area" maxlength="60" placeholder="اسم الحي"></div>
+</div>
+<label for="description">الوصف</label><textarea id="description" maxlength="1000" placeholder="تفاصيل العقار..."></textarea>
+<label for="photos">صور العقار (يمكن اختيار أكثر من صورة)</label><input id="photos" type="file" accept="image/*" multiple>
+<p class="muted" id="photoInfo">اختر صوراً واضحة وبحجم مناسب.</p>
+<button type="submit">حفظ العقار على هذا الجهاز</button>
+<button type="button" class="secondary" id="cancelEdit" hidden>إلغاء التعديل</button>
+</form>
+</section>
+<section class="card">
+<h2>عقاراتي التجريبية</h2>
+<div id="list"><p class="muted">لا توجد عقارات محفوظة بعد.</p></div>
+</section>
+</main>
+</div>
+<script>
+const DB='aqari-owner-local-v1', STORE='properties';
+let db;
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+function reqPromise(r){return new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function allItems(){return reqPromise(db.transaction(STORE).objectStore(STORE).getAll())}
+async function saveItem(x){return reqPromise(db.transaction(STORE,'readwrite').objectStore(STORE).put(x))}
+async function deleteItem(id){return reqPromise(db.transaction(STORE,'readwrite').objectStore(STORE).delete(id))}
+const $=id=>document.getElementById(id);
+function setGate(){const saved=localStorage.getItem('aqari_demo_pin');$('gateText').textContent=saved?'أدخل رمز الدخول الذي أنشأته لهذه اللوحة.':'أنشئ رمز دخول من 4 أرقام لهذه اللوحة على هذا الجهاز.'}
+$('enter').onclick=()=>{const p=$('pin').value;if(!/^\d{4}$/.test(p)){$('gateError').textContent='اكتب أربعة أرقام.';return}
+const old=localStorage.getItem('aqari_demo_pin');if(old&&old!==p){$('gateError').textContent='الرمز غير صحيح.';return}
+if(!old)localStorage.setItem('aqari_demo_pin',p);$('gate').style.display='none';$('app').style.display='block';render()};
+async function render(){const items=(await allItems()).sort((a,b)=>b.created-a.created);const box=$('list');box.innerHTML='';
+if(!items.length){box.innerHTML='<p class="muted">لا توجد عقارات محفوظة بعد.</p>';return}
+for(const x of items){const el=document.createElement('article');el.className='item';const img=document.createElement('img');img.alt='صورة العقار';if(x.photos?.[0])img.src=URL.createObjectURL(x.photos[0]);
+const info=document.createElement('div'),h=document.createElement('h3');h.textContent=x.title;const p=document.createElement('p');p.textContent=[x.price,x.city,x.area].filter(Boolean).join(' • ');const d=document.createElement('p');d.textContent=x.description||'';const e=document.createElement('button');e.className='secondary';e.textContent='تعديل';e.onclick=()=>edit(x);const del=document.createElement('button');del.className='danger';del.textContent='حذف';del.onclick=async()=>{if(confirm('هل تريد حذف هذا العقار؟')){await deleteItem(x.id);render()}};info.append(h,p,d,e,del);el.append(img,info);box.append(el)}
+}
+function edit(x){$('editId').value=x.id;$('title').value=x.title;$('price').value=x.price;$('phone').value=x.phone;$('city').value=x.city;$('area').value=x.area;$('description').value=x.description;$('formTitle').textContent='تعديل العقار';$('cancelEdit').hidden=false;window.scrollTo({top:0,behavior:'smooth'})}
+function resetForm(){$('propertyForm').reset();$('editId').value='';$('formTitle').textContent='إضافة عقار تجريبي';$('cancelEdit').hidden=true}
+$('cancelEdit').onclick=resetForm;
+$('propertyForm').onsubmit=async e=>{e.preventDefault();try{const id=$('editId').value||crypto.randomUUID();const old=id?await reqPromise(db.transaction(STORE).objectStore(STORE).get(id)):null;const files=[...$('photos').files];const photos=files.length?files.map(f=>f):old?.photos||[];const x={id,title:$('title').value.trim(),price:$('price').value.trim(),phone:$('phone').value.trim(),city:$('city').value.trim(),area:$('area').value.trim(),description:$('description').value.trim(),photos,created:old?.created||Date.now()};await saveItem(x);resetForm();$('photoInfo').textContent='تم الحفظ على هذا الجهاز.';await render()}catch(err){alert('تعذر الحفظ. جرّب صوراً أقل حجماً أو عدداً.')}};
+(async()=>{try{db=await openDB();setGate()}catch(e){$('gateError').textContent='المتصفح لم يسمح بالتخزين المحلي. افتح الصفحة في Safari وجرب مرة أخرى.'}})();
+</script>
+</body></html>
