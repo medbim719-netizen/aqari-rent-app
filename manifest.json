@@ -1,0 +1,10 @@
+{
+  "name": "عقارات للإيجار - موريتانيا",
+  "short_name": "عقارات",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6fc",
+  "theme_color": "#0649b8",
+  "lang": "ar",
+  "dir": "rtl"
+}
